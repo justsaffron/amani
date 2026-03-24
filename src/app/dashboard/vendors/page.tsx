@@ -47,6 +47,7 @@ interface SearchResult {
 
 interface SavedVendor {
   id: string
+  googlePlaceId?: string
   category: string
   name: string
   address?: string
@@ -128,13 +129,13 @@ export default function VendorsPage() {
         website: result.website,
         googlePlaceId: result.googlePlaceId,
         rating: result.rating,
-        estimatedCost: result.estimatedCostMid,
+        estimatedCost: Math.round((result.estimatedCostLow + result.estimatedCostHigh) / 2),
       }),
     })
     if (res.ok) {
       const vendor = await res.json()
       setSavedVendors(prev => [vendor, ...prev])
-      setSavedIds(prev => new Set([...prev, result.googlePlaceId]))
+      setSavedIds(prev => new Set(Array.from(prev).concat(result.googlePlaceId)))
     }
   }
 
