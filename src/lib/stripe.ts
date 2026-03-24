@@ -1,8 +1,10 @@
 import Stripe from 'stripe'
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-06-20',
-})
+function getStripe() {
+  return new Stripe(process.env.STRIPE_SECRET_KEY || '', {
+    apiVersion: '2024-06-20',
+  })
+}
 
 export async function createGiftCheckoutSession({
   userId,
@@ -25,14 +27,10 @@ export async function createGiftCheckoutSession({
   successUrl: string
   cancelUrl: string
 }) {
-  // ACH bank transfer (us_bank_account) is capped at 0.8% with a $5 max —
-  // much cheaper than card (2.9% + 30¢) for larger gift amounts.
-  // Both options are shown to the guest at checkout; they choose.
-  const session = await stripe.checkout.sessions.create({
+  const session = await getStripe().checkout.sessions.create({
     payment_method_types: ['card', 'us_bank_account'],
     payment_method_options: {
       us_bank_account: {
-        // Instant verification via Plaid where available; fallback to micro-deposits
         financial_connections: {
           permissions: ['payment_method'],
         },
@@ -59,7 +57,6 @@ export async function createGiftCheckoutSession({
       registryItemId: registryItemId || '',
       guestName: guestName || '',
     },
-    // Show a fee comparison note in the checkout — Stripe renders this natively
     custom_text: {
       submit: {
         message: 'Pay by bank transfer to save on fees (0.8%, max $5). Card payments are also accepted.',
