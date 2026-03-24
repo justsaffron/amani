@@ -1,6 +1,8 @@
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+function getResend() {
+  return new Resend(process.env.RESEND_API_KEY || 'placeholder')
+}
 
 interface SendInviteEmailParams {
   to: string
@@ -81,7 +83,7 @@ export async function sendInviteEmail({
     </html>
   `
 
-  return resend.emails.send({
+  return getResend().emails.send({
     from: process.env.RESEND_FROM_EMAIL || 'noreply@yourdomain.com',
     to,
     subject: `You're invited — ${coupleName}`,
@@ -106,7 +108,7 @@ export async function sendRsvpConfirmationEmail({
     MAYBE: "No worries — we hope you can make it! Feel free to update your RSVP anytime.",
   }
 
-  return resend.emails.send({
+  return getResend().emails.send({
     from: process.env.RESEND_FROM_EMAIL || 'noreply@yourdomain.com',
     to,
     subject: `RSVP Confirmed — ${coupleName}`,
