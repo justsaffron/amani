@@ -150,7 +150,7 @@ export default function RegistryPage() {
       {showModal && (
         <AddItemModal
           onClose={() => setShowModal(false)}
-          onAdded={(item) => {
+          onAdded={(item: RegistryItem) => {
             setItems((prev) => [...prev, { ...item, gifts: [] }])
             setShowModal(false)
           }}
