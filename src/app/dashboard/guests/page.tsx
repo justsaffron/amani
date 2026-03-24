@@ -194,7 +194,7 @@ export default function GuestsPage() {
       </div>
 
       {showAddModal && <AddGuestModal events={events} onClose={() => setShowAddModal(false)} onAdded={(g: Guest) => { setGuests((prev) => [g, ...prev]); setShowAddModal(false) }} />}
-      {showUploadModal && <UploadCSVModal events={events} onClose={() => setShowUploadModal(false)} onUploaded={(newGuests) => { setGuests((prev) => [...newGuests, ...prev]); setShowUploadModal(false) }} />}
+      {showUploadModal && <UploadCSVModal events={events} onClose={() => setShowUploadModal(false)} onUploaded={(newGuests: Guest[]) => { setGuests((prev) => [...newGuests, ...prev]); setShowUploadModal(false) }} />}
     </div>
   )
 }
