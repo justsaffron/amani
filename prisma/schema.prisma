@@ -1,0 +1,232 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Multi-tenant couple accounts ─────────────────────────────────────────────
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String
+  coupleName    String    // e.g. "Saf & Aisha"
+  slug          String    @unique // URL-friendly: "saf-aisha" → /invite/saf-aisha/[token]
+  websiteTitle  String?   // Custom page title
+  heroMessage   String?   // e.g. "Join us as we celebrate our love"
+  photoUrl      String?   // Hero image URL
+  accentColor   String    @default("#e05c60") // blush
+  weddingDate   DateTime? // used for planning timeline countdown
+  weddingCity   String?   // used for vendor search
+  estimatedGuests Int?    // used for vendor quotes
+  totalBudget   Int?      // overall budget in cents
+  events        Event[]
+  guests        Guest[]
+  registryItems RegistryItem[]
+  planningTasks PlanningTask[]
+  savedVendors  SavedVendor[]
+  budgetItems   BudgetItem[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+// ─── Wedding Events ────────────────────────────────────────────────────────────
+model Event {
+  id          String       @id @default(cuid())
+  userId      String
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String       // "Nikah Ceremony", "Walima Reception", "Mehndi Night"
+  description String?
+  date        DateTime
+  endTime     String?      // e.g. "11:00 PM"
+  venue       String?
+  address     String?
+  city        String?
+  dressCode   String?
+  notes       String?      // Special instructions
+  guestEvents GuestEvent[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+// ─── Guests ────────────────────────────────────────────────────────────────────
+model Guest {
+  id          String       @id @default(cuid())
+  userId      String
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  email       String?
+  phone       String?      // E.164 format: +15551234567
+  token       String       @unique @default(cuid()) // Unique invite link token
+  notes       String?
+  guestEvents GuestEvent[]
+  gifts       Gift[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+// ─── Guest ↔ Event junction (with RSVP) ───────────────────────────────────────
+model GuestEvent {
+  id            String    @id @default(cuid())
+  guestId       String
+  guest         Guest     @relation(fields: [guestId], references: [id], onDelete: Cascade)
+  eventId       String
+  event         Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  rsvpStatus    RsvpStatus @default(PENDING)
+  plusOne       Boolean   @default(false)
+  plusOneName   String?
+  dietaryNotes  String?
+  inviteSent    Boolean   @default(false)
+  inviteSentAt  DateTime?
+  inviteMethod  String?   // "email" | "sms" | "both"
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([guestId, eventId])
+}
+
+enum RsvpStatus {
+  PENDING
+  ATTENDING
+  DECLINED
+  MAYBE
+}
+
+// ─── Gift Registry ─────────────────────────────────────────────────────────────
+model RegistryItem {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String   // e.g. "KitchenAid Stand Mixer"
+  description  String?
+  amount       Int      // Target amount in cents (e.g. 50000 = $500)
+  imageUrl     String?
+  externalUrl  String?  // Link to Amazon/Zola product
+  isFunded     Boolean  @default(false)
+  gifts        Gift[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// ─── Gift Contributions (Stripe) ──────────────────────────────────────────────
+model Gift {
+  id                String        @id @default(cuid())
+  guestId           String?
+  guest             Guest?        @relation(fields: [guestId], references: [id], onDelete: SetNull)
+  registryItemId    String?
+  registryItem      RegistryItem? @relation(fields: [registryItemId], references: [id], onDelete: SetNull)
+  userId            String        // which couple this gift is for
+  guestName         String?       // in case guest is anonymous
+  guestEmail        String?
+  amount            Int           // in cents
+  message           String?
+  stripeSessionId   String?       @unique
+  stripePaymentId   String?
+  status            GiftStatus    @default(PENDING)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+}
+
+enum GiftStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+// ─── Wedding Planning: To-Do & Checklist ──────────────────────────────────────
+model PlanningTask {
+  id               String    @id @default(cuid())
+  userId           String
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title            String
+  description      String?
+  category         String    // "legal", "venue", "catering", "attire", "photography", "flowers", "music", "transport", "beauty", "honeymoon", "other"
+  weeksBeforeWedding Int?    // for timeline positioning (e.g. 52 = 1 year before)
+  dueDate          DateTime?
+  completed        Boolean   @default(false)
+  completedAt      DateTime?
+  assignedTo       String?   // "partner1" | "partner2" | "both"
+  notes            String?
+  isCustom         Boolean   @default(false)
+  sortOrder        Int       @default(0)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
+// ─── Vendor Search & Management ───────────────────────────────────────────────
+model SavedVendor {
+  id             String          @id @default(cuid())
+  userId         String
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category       VendorCategory
+  name           String
+  address        String?
+  city           String?
+  phone          String?
+  email          String?
+  website        String?
+  googlePlaceId  String?
+  rating         Float?
+  estimatedCost  Int?            // rough quote in cents
+  notes          String?
+  status         VendorStatus    @default(CONSIDERING)
+  isSelected     Boolean         @default(false)  // the chosen one
+  isArchived     Boolean         @default(false)  // backup/alternate
+  communications VendorComm[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
+
+enum VendorCategory {
+  VENUE
+  CATERING
+  PHOTOGRAPHY
+  DECORATION
+  MUSIC
+  FLORIST
+  CAKE
+  TRANSPORT
+  BEAUTY
+  OTHER
+}
+
+enum VendorStatus {
+  CONSIDERING
+  CONTACTED
+  QUOTE_RECEIVED
+  MEETING_SCHEDULED
+  BOOKED
+  DECLINED
+}
+
+model VendorComm {
+  id         String      @id @default(cuid())
+  vendorId   String
+  vendor     SavedVendor @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  type       String      // "email" | "call" | "meeting" | "note"
+  summary    String
+  date       DateTime    @default(now())
+  createdAt  DateTime    @default(now())
+}
+
+// ─── Budget & Expense Tracker ─────────────────────────────────────────────────
+model BudgetItem {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category      String    // "venue", "catering", "photography", etc.
+  description   String
+  estimatedCost Int       // in cents
+  actualCost    Int?      // in cents (filled when paid)
+  paidBy        String?   // "partner1" | "partner2" | "family" | "joint" | custom
+  isPaid        Boolean   @default(false)
+  paidAt        DateTime?
+  vendorName    String?
+  receiptUrl    String?   // stored file URL
+  notes         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
