@@ -28,13 +28,18 @@ export function DashboardNav({ coupleName }: { coupleName: string }) {
 
   return (
     <>
-      <nav className="bg-white border-b border-gray-100 sticky top-0 z-30">
+      <nav
+        className="sticky top-0 z-30"
+        style={{ backgroundColor: '#FFFDF7', borderBottom: '1px solid #E8D5B0' }}
+      >
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <Link href="/dashboard" className="flex items-center gap-2">
-              <Heart className="w-5 h-5 text-blush-500 fill-current" />
-              <span className="font-serif text-lg font-semibold hidden sm:block">{coupleName}</span>
+              <Heart className="w-5 h-5 fill-current" style={{ color: '#C9A84C' }} />
+              <span className="font-serif text-lg font-semibold hidden sm:block" style={{ color: '#2C1810' }}>
+                {coupleName}
+              </span>
             </Link>
 
             {/* Desktop nav */}
@@ -45,10 +50,24 @@ export function DashboardNav({ coupleName }: { coupleName: string }) {
                   href={href}
                   className={cn(
                     'flex items-center gap-1.5 px-2.5 py-2 rounded-lg text-sm transition-colors',
-                    pathname === href
-                      ? 'bg-blush-50 text-blush-600 font-medium'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                   )}
+                  style={
+                    pathname === href
+                      ? { backgroundColor: '#FBF5E0', color: '#8B6914', fontWeight: 500 }
+                      : { color: '#6B4226' }
+                  }
+                  onMouseEnter={(e) => {
+                    if (pathname !== href) {
+                      e.currentTarget.style.backgroundColor = '#F7EDD8'
+                      e.currentTarget.style.color = '#2C1810'
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (pathname !== href) {
+                      e.currentTarget.style.backgroundColor = 'transparent'
+                      e.currentTarget.style.color = '#6B4226'
+                    }
+                  }}
                 >
                   <Icon className="w-4 h-4" />
                   {label}
@@ -60,13 +79,23 @@ export function DashboardNav({ coupleName }: { coupleName: string }) {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => signOut({ callbackUrl: '/login' })}
-                className="hidden lg:flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+                className="hidden lg:flex items-center gap-1.5 text-sm px-3 py-2 rounded-lg transition-colors"
+                style={{ color: '#6B4226' }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#F7EDD8'
+                  e.currentTarget.style.color = '#2C1810'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent'
+                  e.currentTarget.style.color = '#6B4226'
+                }}
               >
                 <LogOut className="w-4 h-4" />
               </button>
 
               <button
                 className="lg:hidden p-2"
+                style={{ color: '#6B4226' }}
                 onClick={() => setMobileOpen(!mobileOpen)}
               >
                 {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -79,31 +108,39 @@ export function DashboardNav({ coupleName }: { coupleName: string }) {
       {/* Mobile menu */}
       {mobileOpen && (
         <div className="lg:hidden fixed inset-0 z-20 bg-black/20" onClick={() => setMobileOpen(false)}>
-          <div className="bg-white w-72 h-full shadow-xl p-4 overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="w-72 h-full shadow-xl p-4 overflow-y-auto"
+            style={{ backgroundColor: '#FFFDF7' }}
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center gap-2 mb-6 px-2">
-              <Heart className="w-5 h-5 text-blush-500 fill-current" />
-              <span className="font-serif text-lg">{coupleName}</span>
+              <Heart className="w-5 h-5 fill-current" style={{ color: '#C9A84C' }} />
+              <span className="font-serif text-lg" style={{ color: '#2C1810' }}>{coupleName}</span>
             </div>
 
             <div className="mb-3">
-              <p className="text-xs font-medium text-gray-400 uppercase tracking-wide px-2 mb-1">Wedding Planning</p>
+              <p className="text-xs font-medium uppercase tracking-wide px-2 mb-1" style={{ color: '#B8825A' }}>
+                Wedding Planning
+              </p>
               {navItems.slice(0, 4).map(({ href, label, icon: Icon }) => (
                 <Link key={href} href={href} onClick={() => setMobileOpen(false)}
-                  className={cn('flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition-colors',
-                    pathname === href ? 'bg-blush-50 text-blush-600 font-medium' : 'text-gray-700 hover:bg-gray-50'
-                  )}>
+                  className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition-colors"
+                  style={pathname === href ? { backgroundColor: '#FBF5E0', color: '#8B6914', fontWeight: 500 } : { color: '#6B4226' }}
+                >
                   <Icon className="w-4 h-4" />{label}
                 </Link>
               ))}
             </div>
 
             <div className="mb-3">
-              <p className="text-xs font-medium text-gray-400 uppercase tracking-wide px-2 mb-1">Invitations</p>
+              <p className="text-xs font-medium uppercase tracking-wide px-2 mb-1" style={{ color: '#B8825A' }}>
+                Invitations
+              </p>
               {navItems.slice(4, 8).map(({ href, label, icon: Icon }) => (
                 <Link key={href} href={href} onClick={() => setMobileOpen(false)}
-                  className={cn('flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition-colors',
-                    pathname === href ? 'bg-blush-50 text-blush-600 font-medium' : 'text-gray-700 hover:bg-gray-50'
-                  )}>
+                  className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition-colors"
+                  style={pathname === href ? { backgroundColor: '#FBF5E0', color: '#8B6914', fontWeight: 500 } : { color: '#6B4226' }}
+                >
                   <Icon className="w-4 h-4" />{label}
                 </Link>
               ))}
@@ -112,14 +149,17 @@ export function DashboardNav({ coupleName }: { coupleName: string }) {
             <div>
               {navItems.slice(8).map(({ href, label, icon: Icon }) => (
                 <Link key={href} href={href} onClick={() => setMobileOpen(false)}
-                  className={cn('flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition-colors',
-                    pathname === href ? 'bg-blush-50 text-blush-600 font-medium' : 'text-gray-700 hover:bg-gray-50'
-                  )}>
+                  className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition-colors"
+                  style={pathname === href ? { backgroundColor: '#FBF5E0', color: '#8B6914', fontWeight: 500 } : { color: '#6B4226' }}
+                >
                   <Icon className="w-4 h-4" />{label}
                 </Link>
               ))}
-              <button onClick={() => signOut({ callbackUrl: '/login' })}
-                className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm text-gray-600 hover:bg-gray-50 w-full mt-1">
+              <button
+                onClick={() => signOut({ callbackUrl: '/login' })}
+                className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm w-full mt-1 transition-colors"
+                style={{ color: '#6B4226' }}
+              >
                 <LogOut className="w-4 h-4" />Sign out
               </button>
             </div>
