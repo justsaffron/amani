@@ -126,7 +126,7 @@ export default function GuestsPage() {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2.5">
                       <div className="w-8 h-8 rounded-full bg-blush-100 flex items-center justify-center text-blush-600 text-sm font-medium flex-shrink-0">
-                        {guest.name[0].toUpperCase()}
+                        {guest.name?.[0]?.toUpperCase() ?? '?'}
                       </div>
                       <span className="font-medium text-gray-900">{guest.name}</span>
                     </div>
@@ -147,7 +147,7 @@ export default function GuestsPage() {
                   </td>
                   <td className="px-4 py-3 hidden lg:table-cell">
                     <div className="flex flex-wrap gap-1">
-                      {guest.guestEvents.map((ge) => (
+                      {guest.guestEvents.filter((ge) => ge.event).map((ge) => (
                         <span key={ge.event.id} className="badge bg-blush-50 text-blush-700 text-xs">
                           {ge.event.name}
                         </span>
