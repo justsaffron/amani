@@ -18,6 +18,7 @@ model User {
   websiteTitle  String?   // Custom page title
   heroMessage   String?   // e.g. "Join us as we celebrate our love"
   photoUrl      String?   // Hero image URL
+  invitationCardUrl String? // Stored base64 data URI or external URL for invitation card image
   accentColor   String    @default("#e05c60") // blush
   weddingDate   DateTime? // used for planning timeline countdown
   weddingCity   String?   // used for vendor search

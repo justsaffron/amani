@@ -16,6 +16,26 @@ export async function POST(req: Request) {
   const user = await prisma.user.findUnique({ where: { id: session.user.id } })
   if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 })
 
+  // If a new invitation card image was uploaded (base64 data URI or URL), persist it
+  // on the User record and derive a real public URL for email embeds.
+  // data: URIs are blocked by Gmail/Outlook, so we store the image and serve it
+  // via /api/invite-image?userId=xxx which returns the raw binary.
+  let resolvedImageUrl: string | undefined
+  if (invitationImageUrl) {
+    // Store / overwrite the invitation card on the user record
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { invitationCardUrl: invitationImageUrl },
+    })
+
+    const base = (process.env.NEXTAUTH_URL || 'http://localhost:3000').replace(/\/$/, '')
+    resolvedImageUrl = `${base}/api/invite-image?userId=${user.id}`
+  } else if (user.invitationCardUrl) {
+    // Re-use whatever was last stored (allows resending without re-uploading)
+    const base = (process.env.NEXTAUTH_URL || 'http://localhost:3000').replace(/\/$/, '')
+    resolvedImageUrl = `${base}/api/invite-image?userId=${user.id}`
+  }
+
   const results = { sent: 0, failed: 0, errors: [] as string[] }
 
   for (const guestId of guestIds) {
@@ -49,7 +69,7 @@ export async function POST(req: Request) {
           events,
           inviteUrl,
           heroMessage: user.heroMessage || undefined,
-          invitationImageUrl: invitationImageUrl || undefined,
+          invitationImageUrl: resolvedImageUrl,
         })
       }
 
