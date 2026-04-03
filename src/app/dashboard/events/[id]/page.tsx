@@ -122,11 +122,11 @@ export default function EventDetailPage() {
                 <div key={ge.id} className="flex items-center justify-between py-3">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-blush-100 flex items-center justify-center text-blush-600 text-sm font-medium">
-                      {ge.guest.name[0].toUpperCase()}
+                      {ge.guest?.name?.[0]?.toUpperCase() ?? '?'}
                     </div>
                     <div>
-                      <p className="font-medium text-sm text-gray-900">{ge.guest.name}</p>
-                      <p className="text-xs text-gray-400">{ge.guest.email || ge.guest.phone || '—'}</p>
+                      <p className="font-medium text-sm text-gray-900">{ge.guest?.name ?? '—'}</p>
+                      <p className="text-xs text-gray-400">{ge.guest?.email || ge.guest?.phone || '—'}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
