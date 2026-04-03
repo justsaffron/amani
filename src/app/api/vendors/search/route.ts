@@ -22,10 +22,18 @@ const MAX_RESULTS: Record<string, number> = {
   cake: 5,
 }
 
+const CULTURAL_FILTER_KEYWORDS: Record<string, string> = {
+  halal:         'halal',
+  southAsian:    'South Asian',
+  pakistaniIndian: 'Pakistani Indian',
+  muslimOwned:   'Muslim owned',
+}
+
 const schema = z.object({
   location: z.string().min(2),
   category: z.enum(['venue', 'catering', 'photography', 'decoration', 'music', 'cake']),
   guestCount: z.number().min(1).max(2000),
+  filters: z.array(z.string()).optional(),
 })
 
 export async function POST(req: Request) {
@@ -34,7 +42,7 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json()
-    const { location, category, guestCount } = schema.parse(body)
+    const { location, category, guestCount, filters } = schema.parse(body)
 
     const apiKey = process.env.GOOGLE_PLACES_API_KEY
     if (!apiKey) {
@@ -45,7 +53,13 @@ export async function POST(req: Request) {
       )
     }
 
-    const textQuery = `${CATEGORY_QUERIES[category]} in ${location}`
+    // Build keyword suffix from cultural filters
+    const filterKeywords = (filters ?? [])
+      .map((f) => CULTURAL_FILTER_KEYWORDS[f])
+      .filter(Boolean)
+    const keywordSuffix = filterKeywords.length > 0 ? ` ${filterKeywords.join(' ')}` : ''
+
+    const textQuery = `${CATEGORY_QUERIES[category]}${keywordSuffix} in ${location}`
     const maxResultCount = MAX_RESULTS[category] || 5
 
     const response = await fetch('https://places.googleapis.com/v1/places:searchText', {

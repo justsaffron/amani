@@ -10,7 +10,7 @@ export async function POST(req: Request) {
   const session = await getServerSession(authOptions)
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { guestIds, method } = await req.json()
+  const { guestIds, method, invitationImageUrl } = await req.json()
   // method: 'email' | 'sms' | 'both'
 
   const user = await prisma.user.findUnique({ where: { id: session.user.id } })
@@ -36,6 +36,7 @@ export async function POST(req: Request) {
       date: `${formatDate(ge.event.date)} at ${formatTime(ge.event.date)}`,
       venue: ge.event.venue || undefined,
       address: ge.event.address || undefined,
+      city: ge.event.city || undefined,
       dressCode: ge.event.dressCode || undefined,
     }))
 
@@ -48,6 +49,7 @@ export async function POST(req: Request) {
           events,
           inviteUrl,
           heroMessage: user.heroMessage || undefined,
+          invitationImageUrl: invitationImageUrl || undefined,
         })
       }
 
