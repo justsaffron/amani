@@ -30,7 +30,7 @@ export function slugify(text: string) {
     .trim()
 }
 
-export function getInviteUrl(slug: string, token: string) {
-  const base = process.env.NEXTAUTH_URL || 'http://localhost:3000'
-  return `${base}/invite/${slug}/${token}`
+export function getInviteUrl(_slug: string, token: string) {
+  const base = (process.env.NEXTAUTH_URL || 'http://localhost:3000').replace(/\/$/, '')
+  return `${base}/rsvp/${token}`
 }

@@ -1,6 +1,6 @@
 'use client'
-import { useEffect, useState } from 'react'
-import { Send, Mail, MessageSquare, CheckCircle2, Loader2, Users } from 'lucide-react'
+import { useEffect, useState, useRef } from 'react'
+import { Send, Mail, MessageSquare, CheckCircle2, Loader2, Users, ImagePlus, X } from 'lucide-react'
 
 interface Guest {
   id: string
@@ -25,6 +25,21 @@ export default function SendPage() {
   const [selected, setSelected] = useState<string[]>([])
   const [sending, setSending] = useState(false)
   const [result, setResult] = useState<{ sent: number; failed: number; errors: string[] } | null>(null)
+  const [imageDataUrl, setImageDataUrl] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => setImageDataUrl(reader.result as string)
+    reader.readAsDataURL(file)
+  }
+
+  function clearImage() {
+    setImageDataUrl(null)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
 
   useEffect(() => {
     Promise.all([
@@ -62,7 +77,7 @@ export default function SendPage() {
     const res = await fetch('/api/guests/invite', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ guestIds: selected, method }),
+      body: JSON.stringify({ guestIds: selected, method, invitationImageUrl: imageDataUrl }),
     })
     const data = await res.json()
     setResult(data)
@@ -146,6 +161,36 @@ export default function SendPage() {
             </select>
           </div>
         </div>
+
+        {/* Invitation image — only relevant for email */}
+        {(method === 'email' || method === 'both') && (
+          <div className="mt-4 pt-4 border-t border-gray-100">
+            <label className="label mb-2">Invitation card image <span className="text-gray-400 font-normal">(optional)</span></label>
+            {imageDataUrl ? (
+              <div className="flex items-start gap-4">
+                <img src={imageDataUrl} alt="Invitation card preview" className="w-32 h-auto rounded-lg border border-gray-200 object-cover" />
+                <div className="flex flex-col gap-2">
+                  <p className="text-sm text-gray-500">This image will appear in the email above the RSVP button.</p>
+                  <button type="button" onClick={clearImage} className="btn-ghost text-sm flex items-center gap-1.5 text-red-500 hover:text-red-600">
+                    <X className="w-3.5 h-3.5" /> Remove image
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <label className="flex items-center gap-3 cursor-pointer w-fit border-2 border-dashed border-gray-200 hover:border-blush-300 rounded-xl px-5 py-4 transition-colors">
+                <ImagePlus className="w-5 h-5 text-gray-400" />
+                <span className="text-sm text-gray-500">Upload JPEG or PNG</span>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                  onChange={handleImageChange}
+                />
+              </label>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Guest selection */}

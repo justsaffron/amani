@@ -69,6 +69,7 @@ export default function VendorsPage() {
   const [searching, setSearching] = useState(false)
   const [searchResults, setSearchResults] = useState<SearchResult[]>([])
   const [searchError, setSearchError] = useState('')
+  const [culturalFilters, setCulturalFilters] = useState<string[]>([])
   const [savedVendors, setSavedVendors] = useState<SavedVendor[]>([])
   const [savedLoading, setSavedLoading] = useState(true)
   const [filterCategory, setFilterCategory] = useState('')
@@ -101,7 +102,7 @@ export default function VendorsPage() {
     const res = await fetch('/api/vendors/search', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(searchForm),
+      body: JSON.stringify({ ...searchForm, filters: culturalFilters }),
     })
     const data = await res.json()
 
@@ -246,6 +247,33 @@ export default function VendorsPage() {
                 </select>
               </div>
             </div>
+            {/* Cultural / dietary filters */}
+            <div className="mb-4 pt-3 border-t border-gray-100">
+              <p className="label mb-2">Cultural &amp; dietary filters <span className="text-gray-400 font-normal">(optional)</span></p>
+              <div className="flex flex-wrap gap-3">
+                {[
+                  { key: 'halal',           label: '🥩 Halal' },
+                  { key: 'southAsian',      label: '🪔 South Asian' },
+                  { key: 'pakistaniIndian', label: '🌙 Pakistani & Indian' },
+                  { key: 'muslimOwned',     label: '☪️ Muslim-owned' },
+                ].map(({ key, label }) => (
+                  <label key={key} className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      className="rounded"
+                      checked={culturalFilters.includes(key)}
+                      onChange={(e) =>
+                        setCulturalFilters((prev) =>
+                          e.target.checked ? [...prev, key] : prev.filter((f) => f !== key)
+                        )
+                      }
+                    />
+                    {label}
+                  </label>
+                ))}
+              </div>
+            </div>
+
             <button type="submit" className="btn-primary flex items-center gap-2" disabled={searching}>
               {searching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
               {searching ? 'Searching…' : 'Search vendors'}
